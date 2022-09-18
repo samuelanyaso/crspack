@@ -1,0 +1,19 @@
+Package: crspack
+Title: Rank-Sum for cluster-correlated data
+Version: 0.0.0.9000
+Authors@R: c(
+    person("Samuel", "Anyaso-Samuel", email = "sanyasosamuel@ufl.edu", role = c("aut", "cre")),
+	person("Somnath", "Datta", email = "somnath.datta@ufl.edu", role = "aut")
+	)
+Description: Inference based on rank-sum statistics for cluster-correlated data with informativeness of the total cluster size, informativeness of a binary covariate distribution or informativeness of a subject-level covariate distribution.
+License: GPL-2
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.2
+LinkingTo: 
+    Rcpp,
+    RcppArmadillo
+Imports: 
+    Rcpp,
+	Rdpack
+RdMacros: Rdpack
