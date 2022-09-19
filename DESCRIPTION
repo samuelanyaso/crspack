@@ -15,5 +15,9 @@ LinkingTo:
     RcppArmadillo
 Imports: 
     Rcpp,
-	Rdpack
+	Rdpack (>= 0.7),
+	doParallel,
+	parallel,
+	foreach,
+	stats
 RdMacros: Rdpack

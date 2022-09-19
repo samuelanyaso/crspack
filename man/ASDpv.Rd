@@ -2,20 +2,44 @@
 % Please edit documentation in R/ASDpv.R
 \name{ASDpv}
 \alias{ASDpv}
-\title{Compute p-value for the ASD statistic}
+\title{p-value for the ASD statistic}
 \usage{
-ASDpv(dw, K = 10000)
+ASDpv(
+  mdat,
+  iICGs = TRUE,
+  useZ = "percentiles",
+  npctiles = 10,
+  Zvals = NULL,
+  method = "nonscaled",
+  K = 10000,
+  parallel = TRUE,
+  cores = 5
+)
 }
 \arguments{
-\item{dw}{a numeric matrix with columns names 'cID', 'Y', and 'Z' that denotes the cluster ID, response, and subject-level covariate, respectively.}
+\item{mdat}{a numeric matrix with columns names 'cID', 'Y', and 'Z' that denotes the cluster ID, response, and subject-level covariate, respectively.}
+
+\item{iICGs}{a logical argument indicating if values of \emph{Z} that creates incomplete ICG should be discarded. Default is \code{TRUE}.}
+
+\item{useZ}{a character argument that indicates if 'all', 'percentiles', or 'prespecified' values of Z should be used to create data sets with a binary grouping variable. The \insertCite{dutta2016;textual}{crspack} statistic will be applied to these data sets. Default is 'percentiles'.}
+
+\item{npctiles}{an integer indicating the number of equally spaced percentile points, if useZ='percentiles'. Default is 10.}
+
+\item{Zvals}{a numeric vector indicating the pre-specified values of \emph{Z} if useZ='prespecified'.}
+
+\item{method}{a character argument indicating whether the DD statistic should be 'scaled' or not ('nonscaled') by its standard deviation. Default is 'nonscaled'.}
 
 \item{K}{an integer indicating the number of permutations. The default is 10000.}
+
+\item{parallel}{a logical argument indicating whether to parallelize the permuatation procedure.}
+
+\item{cores}{an integer indicating the number of cores to use for parallelization. For instance see \code{parallel::detectCores()}.}
 }
 \value{
-a list of three elements which are the observed test statistic, a numeric vector of the K permuted statistics, and the computed p-value.
+a list of three elements which are the observed test statistic, a numeric vector of the \emph{K} permuted statistics, and the computed p-value.
 }
 \description{
-Compute p-value for the ASD statistic
+Compute p-value for the ASD statistic.
 }
 \details{
 Uses permutation tests to obtain the p-value of the ASD statistic. The procedure proceeds by permuting the subject-level covariate within each cluster, the ASD-statistic is computed for each permuted sample. The p-value is the proportion of the permuted statistic greater than the observed statistic.
@@ -24,7 +48,7 @@ Uses permutation tests to obtain the p-value of the ASD statistic. The procedure
 ## simple data simulation
 m <- 3
 mdat <- lapply(1:m, function(x){
-  ni <- rpois(n=1, lambda=10)+2 # cluster size
+  ni <- rpois(n=1, lambda=4)+2 # cluster size
   cID <- rep(x=x, times=ni) # cluster ids
   nu <- rnorm(n=1, mean=0, sd=0.25) # cluster-level random effect
   Z <- rnorm(n=ni, mean=1, sd=0.25) # subject-level covariate
@@ -34,8 +58,10 @@ mdat <- lapply(1:m, function(x){
 mdat <- do.call(rbind, mdat)
 mdat <- apply(as.matrix(mdat),2,as.numeric)
 
-## Estimate the state occupation probabilities
-ASDpv(dw=mdat, K=10)
+## Estimate the p-value of the ASD statistic
+ASDpv(mdat=mdat, iICGs=TRUE, useZ='percentiles',
+npctiles=10, Zvals=NULL, method='nonscaled',
+K = 10, parallel=TRUE, cores=5)
 }
 \references{
 {
