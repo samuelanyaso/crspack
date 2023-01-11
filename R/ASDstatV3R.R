@@ -100,8 +100,8 @@ ASDstatV3R <- function(mdat, iICGs = TRUE, useZ = "percentiles", npctiles = 10, 
         if (b1) {
             res <- NA
         } else {
-            # if iCGs is TRUE here, then do not recreate data for ICG case in cpp function.  since each dataset created by z's have
-            # complete ICG structure.
+            # if iCGs is TRUE here, then do not recreate data for ICG case in cpp function.  since each dataset created
+            # by z's have complete ICG structure.
             if (method == "scaled") {
                 res <- DDstatV2C(dw = tmp1, iICGs = b2, get_var = TRUE)
                 res <- (res$Zscore)^2

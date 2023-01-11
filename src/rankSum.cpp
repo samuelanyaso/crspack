@@ -323,7 +323,7 @@ List DDstatV2C (arma::mat dw, bool iICGs=true, bool get_var=true){
 	
 	exp_val = 0.25*(m + 1)*sum(res2); // expected value of the test statistic
 	
-	tmp4 = (tmp0 + 2*tmp1) / (4 * nv1);
+	tmp4 = (tmp0 + 2*nv1 % tmp1) / (4 * nv1);
 	tmp5 = (tmp0 + 2*tmp1) / (2 * nv1);
 		
 	// compute the DD statistic
@@ -334,6 +334,7 @@ List DDstatV2C (arma::mat dw, bool iICGs=true, bool get_var=true){
 	
 	// computes the variance
 	double vDD; double vDDa; double Zscore;
+	arma::vec Tstar;
 	if(get_var){
 		
 		arma::mat res1b;
@@ -356,18 +357,18 @@ List DDstatV2C (arma::mat dw, bool iICGs=true, bool get_var=true){
 			tmp5b.shed_rows(tmp6);
 			tmp7(j) = accu(res1b) + accu(tmp5b);
 		}
-		// Tstar = test_stat - tmp7;
-		// vDDa = arma::var(Tstar);
-		// vDD = ((m*m)/(m-1)) * vDDa;
-		// if (vDD <= 0.00000001) {
-		// 	vDD = 0.00000001;
-		// } 		
-		Tstar = m*test_stat - (m - 1)*tmp7;
+		Tstar = test_stat - tmp7;
 		vDDa = arma::var(Tstar);
-		vDD = (1/m) * vDDa;
+		vDD = ((m*m)/(m-1)) * vDDa;
 		if (vDD <= 0.00000001) {
 			vDD = 0.00000001;
-		} 	
+		} 		
+		// Tstar = m*test_stat - (m - 1)*tmp7;
+		// vDDa = arma::var(Tstar);
+		// vDD = (1/m) * vDDa;
+		// if (vDD <= 0.00000001) {
+		// 	vDD = 0.00000001;
+		// } 	
 		Zscore = (test_stat - exp_val)/sqrt(vDD);
 	}
 
@@ -376,6 +377,7 @@ List DDstatV2C (arma::mat dw, bool iICGs=true, bool get_var=true){
 	bes["exp_val"] = exp_val;
 	bes["var"] = vDD;
 	bes["Zscore"] = Zscore;
+	bes["Tstar"] = Tstar;
 	// bes["res1"] = res1;
 	// bes["tmp5"] = tmp5;
 	// bes["vDDa"] = vDDa;
