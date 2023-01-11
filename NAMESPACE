@@ -3,6 +3,7 @@
 export(ASDpv)
 export(ASDstatV3R)
 export(DDstatV2)
+export(chkICG)
 import(doParallel)
 import(foreach)
 import(parallel)

@@ -340,7 +340,6 @@ List DDstatV2C (arma::mat dw, bool iICGs=true, bool get_var=true){
 		arma::mat res1b;
 		arma::vec tmp5b;
 		arma::uvec tmp6;
-		arma::vec Tstar;
 		arma::vec tmp7(m);	
 		
 		// the leave one cluster out estimates
