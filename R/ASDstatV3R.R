@@ -3,11 +3,11 @@
 ##' Computes the ASD statistic by aggregating over the \insertCite{dutta2016;textual}{crspack} statistics (DD statistic, herein) obtained from the data sets with binary groups formed by selected values of the subject-level continuous covariate.
 ##' @title The ASD statistic
 ##' @param mdat a numeric matrix with columns names 'cID', 'Y', and 'Z' that denotes the cluster ID, response, and subject-level covariate, respectively.
-##' @param iICGs a logical argument indicating if values of Z that creates incomplete ICG should be discarded. Default is `TRUE`.
+##' @param swapG a logical argument set to TRUE if we should swap the group indicator of a random observation in a cluster with incomplete ICG size. Default is `TRUE`.
+##' @param iICGs a logical argument indicating if values of Z that creates incomplete ICG should be discarded. If `swapG=TRUE` then set to `FALSE`. Default is `FALSE`.
 ##' @param useZ a character argument that indicates if 'all', 'percentiles', or 'prespecified' values of *Z* should be used to create data sets with a binary grouping variable. The DD statistic will be applied to these data sets. Default is 'percentiles'.
 ##' @param npctiles an integer indicating the number of equally spaced percentile points, if useZ='percentiles'. Default is 10.
 ##' @param Zvals a numeric vector indicating the pre-specified values of *Z* if useZ='prespecified'.
-##' @param method a character argument indicating whether the DD statistic should be 'scaled' or not ('nonscaled') by its standard deviation. Default is 'nonscaled'.
 ##' @return a list of three elements which are the ASD test statistic, a numeric vector of DD statistic evaluated at the Zs, and a numeric vector indicating the values/percentiles of *Z* at which the DD stat were evaluated (returns an empty vector if useZ='all').
 ##' @author Samuel Anyaso-Samuel, Somnath Datta
 ##' @import doParallel stats
@@ -31,23 +31,16 @@
 ##' })
 ##' mdat <- do.call(rbind, mdat)
 ##' mdat <- apply(as.matrix(mdat),2,as.numeric)
-##' 
+##'
 ##' ## Estimate the ASD statistic
-##' ASDstatV3R(mdat=mdat, iICGs=TRUE, useZ='percentiles', npctiles=10, Zvals=NULL, method='nonscaled')
-ASDstatV3R <- function(mdat, iICGs = TRUE, useZ = "percentiles", npctiles = 10, Zvals = NULL, method = "nonscaled") {
+##' ASDstatV3R(mdat=mdat, swapG = TRUE, iICGs=FALSE, useZ='percentiles', npctiles=10, Zvals=NULL)
+ASDstatV3R <- function(mdat, swapG = TRUE, iICGs = FALSE, useZ = "percentiles", npctiles = 10, Zvals = NULL) {
 
     # figure out useZ
     arg0 <- c("all", "percentiles", "prespecified")
     arg0chk <- charmatch(useZ, arg0)
     if (is.na(arg0chk)) {
         stop("useZ should be either 'all', 'percentiles' or 'prespecified' ")
-    }
-
-    # figure out the method
-    arg1 <- c("nonscaled", "scaled")
-    arg1chk <- charmatch(method, arg1)
-    if (is.na(arg1chk)) {
-        stop("method should be either 'nonscaled' or 'scaled'")
     }
 
     # figure out the data
@@ -60,6 +53,7 @@ ASDstatV3R <- function(mdat, iICGs = TRUE, useZ = "percentiles", npctiles = 10, 
 
     # create the data matrix
     mdat <- apply(as.matrix(mdat), 2, as.numeric)
+    mdat <- mdat[order(mdat[, "cID"]), ]  # sort data by cID
 
     ######################################### begin computation for the ASD statistic
     Z <- mdat[, "Z"]
@@ -79,46 +73,12 @@ ASDstatV3R <- function(mdat, iICGs = TRUE, useZ = "percentiles", npctiles = 10, 
         Zvals <- Zvals
     }
 
-    ijs <- NULL
-    tmp0 <- foreach(ijs = 1:length(Zvals), .combine = "c", .errorhandling = "remove") %do% {
-
-        z <- Zvals[ijs]
-        tmp1 <- mdat  # data set with group indicators for each z.
-        tmp1[, "Z"] <- ifelse(Z <= z, 1, 0)
-        colnames(tmp1)[which(colnames(tmp1) == "Z")] <- "grp"
-
-        if (iICGs) {
-            # checks if z creates a data set with incomplete ICG
-            b1 <- foo7v2C(tmp1)
-            b2 <- FALSE
-        } else {
-            b1 <- FALSE
-            b2 <- TRUE
-        }
-
-        # move to the next z if dataset with incomplete ICG str is created else, compute the DD statistic
-        if (b1) {
-            res <- NA
-        } else {
-            # if iCGs is TRUE here, then do not recreate data for ICG case in cpp function.  since each dataset created by z's have
-            # complete ICG structure.
-            if (method == "scaled") {
-                res <- DDstatV2C(dw = tmp1, iICGs = b2, get_var = TRUE)
-                res <- (res$Zscore)^2
-            } else if (method == "nonscaled") {
-                res <- DDstatV2C(dw = tmp1, iICGs = b2, get_var = FALSE)
-                res <- (res$test_stat - res$exp_val)^2
-            }
-        }
-        res
-    }
-    ASDtmp <- tmp0[!is.na(tmp0)]
-    vstat <- sum(ASDtmp)/length(ASDtmp)
+    ## computes the ASD statistic
+    res0 <- ASDstatV3C(dw = mdat, Z = Zvals, iICGs = iICGs, swapG = swapG)
 
     if (useZ == "all")
         Zvals = NULL
-    res <- list(vstat = vstat, Vstar = tmp0, Zvals = Zvals)
+
+    res <- list(vstat = res0$v_stat, Vstar = res0$Vstar, Zvals = Zvals)
     return(res)
 }
-
-

@@ -6,11 +6,11 @@
 \usage{
 ASDpv(
   mdat,
-  iICGs = TRUE,
+  swapG = TRUE,
+  iICGs = FALSE,
   useZ = "percentiles",
   npctiles = 10,
   Zvals = NULL,
-  method = "nonscaled",
   K = 10000,
   parallel = TRUE,
   cores = 5
@@ -19,15 +19,15 @@ ASDpv(
 \arguments{
 \item{mdat}{a numeric matrix with columns names 'cID', 'Y', and 'Z' that denotes the cluster ID, response, and subject-level covariate, respectively.}
 
-\item{iICGs}{a logical argument indicating if values of \emph{Z} that creates incomplete ICG should be discarded. Default is \code{TRUE}.}
+\item{swapG}{a logical argument set to TRUE if we should swap the group indicator of a random observation in a cluster with incomplete ICG size. Default is \code{TRUE}.}
 
-\item{useZ}{a character argument that indicates if 'all', 'percentiles', or 'prespecified' values of Z should be used to create data sets with a binary grouping variable. The \insertCite{dutta2016;textual}{crspack} statistic will be applied to these data sets. Default is 'percentiles'.}
+\item{iICGs}{a logical argument indicating if values of Z that creates incomplete ICG should be discarded. If \code{swapG=TRUE} then set to \code{FALSE}. Default is \code{FALSE}.}
+
+\item{useZ}{a character argument that indicates if 'all', 'percentiles', or 'prespecified' values of \emph{Z} should be used to create data sets with a binary grouping variable. The DD statistic will be applied to these data sets. Default is 'percentiles'.}
 
 \item{npctiles}{an integer indicating the number of equally spaced percentile points, if useZ='percentiles'. Default is 10.}
 
 \item{Zvals}{a numeric vector indicating the pre-specified values of \emph{Z} if useZ='prespecified'.}
-
-\item{method}{a character argument indicating whether the DD statistic should be 'scaled' or not ('nonscaled') by its standard deviation. Default is 'nonscaled'.}
 
 \item{K}{an integer indicating the number of permutations. The default is 10000.}
 
@@ -59,9 +59,8 @@ mdat <- do.call(rbind, mdat)
 mdat <- apply(as.matrix(mdat),2,as.numeric)
 
 ## Estimate the p-value of the ASD statistic
-ASDpv(mdat=mdat, iICGs=TRUE, useZ='percentiles',
-npctiles=10, Zvals=NULL, method='nonscaled',
-K = 10, parallel=TRUE, cores=5)
+ASDpv(mdat=mdat, swapG = TRUE, iICGs=FALSE, useZ='percentiles',
+npctiles=10, Zvals=NULL, K = 10, parallel=TRUE, cores=5)
 }
 \references{
 {

@@ -6,25 +6,25 @@
 \usage{
 ASDstatV3R(
   mdat,
-  iICGs = TRUE,
+  swapG = TRUE,
+  iICGs = FALSE,
   useZ = "percentiles",
   npctiles = 10,
-  Zvals = NULL,
-  method = "nonscaled"
+  Zvals = NULL
 )
 }
 \arguments{
 \item{mdat}{a numeric matrix with columns names 'cID', 'Y', and 'Z' that denotes the cluster ID, response, and subject-level covariate, respectively.}
 
-\item{iICGs}{a logical argument indicating if values of Z that creates incomplete ICG should be discarded. Default is \code{TRUE}.}
+\item{swapG}{a logical argument set to TRUE if we should swap the group indicator of a random observation in a cluster with incomplete ICG size. Default is \code{TRUE}.}
+
+\item{iICGs}{a logical argument indicating if values of Z that creates incomplete ICG should be discarded. If \code{swapG=TRUE} then set to \code{FALSE}. Default is \code{FALSE}.}
 
 \item{useZ}{a character argument that indicates if 'all', 'percentiles', or 'prespecified' values of \emph{Z} should be used to create data sets with a binary grouping variable. The DD statistic will be applied to these data sets. Default is 'percentiles'.}
 
 \item{npctiles}{an integer indicating the number of equally spaced percentile points, if useZ='percentiles'. Default is 10.}
 
 \item{Zvals}{a numeric vector indicating the pre-specified values of \emph{Z} if useZ='prespecified'.}
-
-\item{method}{a character argument indicating whether the DD statistic should be 'scaled' or not ('nonscaled') by its standard deviation. Default is 'nonscaled'.}
 }
 \value{
 a list of three elements which are the ASD test statistic, a numeric vector of DD statistic evaluated at the Zs, and a numeric vector indicating the values/percentiles of \emph{Z} at which the DD stat were evaluated (returns an empty vector if useZ='all').
@@ -50,7 +50,7 @@ mdat <- do.call(rbind, mdat)
 mdat <- apply(as.matrix(mdat),2,as.numeric)
 
 ## Estimate the ASD statistic
-ASDstatV3R(mdat=mdat, iICGs=TRUE, useZ='percentiles', npctiles=10, Zvals=NULL, method='nonscaled')
+ASDstatV3R(mdat=mdat, swapG = TRUE, iICGs=FALSE, useZ='percentiles', npctiles=10, Zvals=NULL)
 }
 \references{
 {

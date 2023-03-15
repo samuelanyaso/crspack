@@ -3,7 +3,8 @@
 ##' Checks if data has incomplete ICG structure.
 ##' @title Incomplete ICG structure
 ##' @param mdat a numeric matrix with columns names 'cID', 'Y', and 'G' that denotes the cluster ID, response, and group indicator, respectively.
-##' @return a boolean, indicating if data has incomplete ICG structure.
+##' @param swapG a logical argument set to TRUE if we should swap the group indicator of a random observation in a cluster with incomplete ICG size. Default is `TRUE`.
+##' @return a list of three elements which are - boolean indicating if data has incomplete ICG structure, a matrix of cluster id and indicators of whether such cluster has incomplete ICG, and the resulting dataframe.
 ##' @author Samuel Anyaso-Samuel, Somnath Datta
 ##' @export
 ##' @useDynLib crspack
@@ -29,8 +30,8 @@
 ##' mdat <- apply(as.matrix(mdat),2,as.numeric)
 ##'
 ##' ## Checks if data has incomplete ICG structure
-##' chkICG(mdat=mdat)
-chkICG <- function(mdat) {
+##' chkICG(mdat=mdat, swapG=TRUE)
+chkICG <- function(mdat, swapG = TRUE) {
 
     # figure out the data
     arg2 <- c("cID", "Y", "G")
@@ -44,7 +45,7 @@ chkICG <- function(mdat) {
     mdat <- apply(as.matrix(mdat), 2, as.numeric)
 
     ######################################### Checks if data has incomplete ICG structure
-    res <- foo7v2C(dw = mdat)
+    res <- foo7v2C(dw = mdat, swapG)
 
     return(res)
 }

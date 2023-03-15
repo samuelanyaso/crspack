@@ -4,13 +4,15 @@
 \alias{chkICG}
 \title{Incomplete ICG structure}
 \usage{
-chkICG(mdat)
+chkICG(mdat, swapG = TRUE)
 }
 \arguments{
 \item{mdat}{a numeric matrix with columns names 'cID', 'Y', and 'G' that denotes the cluster ID, response, and group indicator, respectively.}
+
+\item{swapG}{a logical argument set to TRUE if we should swap the group indicator of a random observation in a cluster with incomplete ICG size. Default is \code{TRUE}.}
 }
 \value{
-a boolean, indicating if data has incomplete ICG structure.
+a list of three elements which are - boolean indicating if data has incomplete ICG structure, a matrix of cluster id and indicators of whether such cluster has incomplete ICG, and the resulting dataframe.
 }
 \description{
 Incomplete ICG structure
@@ -35,7 +37,7 @@ mdat <- do.call(rbind, mdat)
 mdat <- apply(as.matrix(mdat),2,as.numeric)
 
 ## Checks if data has incomplete ICG structure
-chkICG(mdat=mdat)
+chkICG(mdat=mdat, swapG=TRUE)
 }
 \references{
 {

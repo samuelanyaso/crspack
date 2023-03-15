@@ -3,11 +3,11 @@
 ##' Uses permutation tests to obtain the p-value of the ASD statistic. The procedure proceeds by permuting the subject-level covariate within each cluster, the ASD-statistic is computed for each permuted sample. The p-value is the proportion of the permuted statistic greater than the observed statistic.
 ##' @title p-value for the ASD statistic
 ##' @param mdat a numeric matrix with columns names 'cID', 'Y', and 'Z' that denotes the cluster ID, response, and subject-level covariate, respectively.
-##' @param iICGs a logical argument indicating if values of *Z* that creates incomplete ICG should be discarded. Default is `TRUE`.
-##' @param useZ a character argument that indicates if 'all', 'percentiles', or 'prespecified' values of Z should be used to create data sets with a binary grouping variable. The \insertCite{dutta2016;textual}{crspack} statistic will be applied to these data sets. Default is 'percentiles'.
+##' @param swapG a logical argument set to TRUE if we should swap the group indicator of a random observation in a cluster with incomplete ICG size. Default is `TRUE`.
+##' @param iICGs a logical argument indicating if values of Z that creates incomplete ICG should be discarded. If `swapG=TRUE` then set to `FALSE`. Default is `FALSE`.
+##' @param useZ a character argument that indicates if 'all', 'percentiles', or 'prespecified' values of *Z* should be used to create data sets with a binary grouping variable. The DD statistic will be applied to these data sets. Default is 'percentiles'.
 ##' @param npctiles an integer indicating the number of equally spaced percentile points, if useZ='percentiles'. Default is 10.
 ##' @param Zvals a numeric vector indicating the pre-specified values of *Z* if useZ='prespecified'.
-##' @param method a character argument indicating whether the DD statistic should be 'scaled' or not ('nonscaled') by its standard deviation. Default is 'nonscaled'.
 ##' @param K an integer indicating the number of permutations. The default is 10000.
 ##' @param parallel a logical argument indicating whether to parallelize the permuatation procedure.
 ##' @param cores an integer indicating the number of cores to use for parallelization. For instance see `parallel::detectCores()`.
@@ -34,12 +34,11 @@
 ##' })
 ##' mdat <- do.call(rbind, mdat)
 ##' mdat <- apply(as.matrix(mdat),2,as.numeric)
-##' 
+##'
 ##' ## Estimate the p-value of the ASD statistic
-##' ASDpv(mdat=mdat, iICGs=TRUE, useZ='percentiles',
-##' npctiles=10, Zvals=NULL, method='nonscaled',
-##' K = 10, parallel=TRUE, cores=5)
-ASDpv <- function(mdat, iICGs = TRUE, useZ = "percentiles", npctiles = 10, Zvals = NULL, method = "nonscaled", K = 10000, parallel = TRUE,
+##' ASDpv(mdat=mdat, swapG = TRUE, iICGs=FALSE, useZ='percentiles',
+##' npctiles=10, Zvals=NULL, K = 10, parallel=TRUE, cores=5)
+ASDpv <- function(mdat, swapG = TRUE, iICGs = FALSE, useZ = "percentiles", npctiles = 10, Zvals = NULL, K = 10000, parallel = TRUE,
     cores = 5) {
 
     # figure out useZ
@@ -47,13 +46,6 @@ ASDpv <- function(mdat, iICGs = TRUE, useZ = "percentiles", npctiles = 10, Zvals
     arg0chk <- charmatch(useZ, arg0)
     if (is.na(arg0chk)) {
         stop("useZ should be either 'all', 'percentiles' or 'prespecified' ")
-    }
-
-    # figure out the method
-    arg1 <- c("nonscaled", "scaled")
-    arg1chk <- charmatch(method, arg1)
-    if (is.na(arg1chk)) {
-        stop("method should be either 'nonscaled' or 'scaled'")
     }
 
     # figure out the data
@@ -67,12 +59,12 @@ ASDpv <- function(mdat, iICGs = TRUE, useZ = "percentiles", npctiles = 10, Zvals
     # create the data matrix
     mdat <- apply(as.matrix(mdat), 2, as.numeric)
 
-    if (parallel == TRUE) {
+    ## compute the observed test statistic
+    obstat <- ASDstatV3R(mdat = mdat, swapG = swapG, iICGs = iICGs, useZ = useZ, npctiles = npctiles)
+    Zvals <- obstat$Zvals
+    obstat <- obstat$vstat
 
-        ## compute the observed test statistic
-        obstat <- ASDstatV3R(mdat = mdat, iICGs = iICGs, useZ = useZ, npctiles = npctiles, method = method)
-        Zvals <- obstat$Zvals
-        obstat <- obstat$vstat
+    if (parallel == TRUE) {
 
         ## set up parallel backend
 
@@ -102,9 +94,9 @@ ASDpv <- function(mdat, iICGs = TRUE, useZ = "percentiles", npctiles = 10, Zvals
 
                 # compute the ASDstat for the permuted data
                 if (useZ != "all") {
-                  pstat <- ASDstatV3R(mdat = pdat, iICGs = iICGs, useZ = "prespecified", Zvals = Zvals, method = method)
+                  pstat <- ASDstatV3R(mdat = pdat, swapG = swapG, iICGs = iICGs, useZ = "prespecified", Zvals = Zvals)
                 } else {
-                  pstat <- ASDstatV3R(mdat = pdat, iICGs = iICGs, useZ = "all", method = method)
+                  pstat <- ASDstatV3R(mdat = pdat, swapG = swapG, iICGs = iICGs, useZ = "all")
                 }
 
                 # return the values for both stats
@@ -121,7 +113,7 @@ ASDpv <- function(mdat, iICGs = TRUE, useZ = "percentiles", npctiles = 10, Zvals
         res <- list(obstat = obstat, permstat = permstat, pvalue = pvalue)
     } else {
         ## Note that the ASD statistic embedded in this function is based on the data sets created by all Z.
-        res <- ASDpvC(dw = mdat, K = K)
+        res <- ASDpv3C(dw = mdat, K = K, Z = Zvals, swapG = swapG, iICGs = iICGs)
     }
     return(res)
 }

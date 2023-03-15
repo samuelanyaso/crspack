@@ -12,18 +12,19 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // foo7v2C
-bool foo7v2C(arma::mat dw);
-RcppExport SEXP _crspack_foo7v2C(SEXP dwSEXP) {
+List foo7v2C(arma::mat dw, bool swapG);
+RcppExport SEXP _crspack_foo7v2C(SEXP dwSEXP, SEXP swapGSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::mat >::type dw(dwSEXP);
-    rcpp_result_gen = Rcpp::wrap(foo7v2C(dw));
+    Rcpp::traits::input_parameter< bool >::type swapG(swapGSEXP);
+    rcpp_result_gen = Rcpp::wrap(foo7v2C(dw, swapG));
     return rcpp_result_gen;
 END_RCPP
 }
 // goo2C
-/* Evaluates the third summation in the test statistic - for all xijk in data with grp==1. 	Inputs: dw - full data matrix for both grps and all clusters, with three cols - id, outcome, grp. 			dw1 - data matrix for only the grp=1, with two cols - id, outcome. 			m - number of unique clusters 	Output: matrix with nrows of dw1 and ncols is m. */ arma::mat goo2C(arma::mat dw, arma::mat dw1, int m);
+/* Evaluates the third summation in the test statistic - for all xijk in data with grp==1.  Inputs: dw - full data matrix for both grps and all clusters, with three cols - id, outcome, grp.  dw1 - data matrix for only the grp=1, with two cols - id, outcome.  m - number of unique clusters  Output: matrix with nrows of dw1 and ncols is m. */ arma::mat goo2C(arma::mat dw, arma::mat dw1, int m);
 RcppExport SEXP _crspack_goo2C(SEXP dwSEXP, SEXP dw1SEXP, SEXP mSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -60,7 +61,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // var_funC
-double var_funC(arma::mat dw);
+/* Compute the jackknife variance */ double var_funC(arma::mat dw);
 RcppExport SEXP _crspack_var_funC(SEXP dwSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -71,7 +72,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // ASDstatV1C
-List ASDstatV1C(arma::mat dw);
+/* Compute the V statistic. Takes a matrix as input.  - first col is the cluster id  - second column is the response  - third column is the continuous covariate */ List ASDstatV1C(arma::mat dw);
 RcppExport SEXP _crspack_ASDstatV1C(SEXP dwSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -93,6 +94,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// ASDstatV3C
+List ASDstatV3C(arma::mat dw, arma::vec Z, bool swapG, bool iICGs);
+RcppExport SEXP _crspack_ASDstatV3C(SEXP dwSEXP, SEXP ZSEXP, SEXP swapGSEXP, SEXP iICGsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type dw(dwSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type Z(ZSEXP);
+    Rcpp::traits::input_parameter< bool >::type swapG(swapGSEXP);
+    Rcpp::traits::input_parameter< bool >::type iICGs(iICGsSEXP);
+    rcpp_result_gen = Rcpp::wrap(ASDstatV3C(dw, Z, swapG, iICGs));
+    return rcpp_result_gen;
+END_RCPP
+}
 // ASDpvC
 List ASDpvC(arma::mat dw, int K);
 RcppExport SEXP _crspack_ASDpvC(SEXP dwSEXP, SEXP KSEXP) {
@@ -105,16 +120,33 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// ASDpv3C
+List ASDpv3C(arma::mat dw, int K, arma::vec Z, bool swapG, bool iICGs);
+RcppExport SEXP _crspack_ASDpv3C(SEXP dwSEXP, SEXP KSEXP, SEXP ZSEXP, SEXP swapGSEXP, SEXP iICGsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type dw(dwSEXP);
+    Rcpp::traits::input_parameter< int >::type K(KSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type Z(ZSEXP);
+    Rcpp::traits::input_parameter< bool >::type swapG(swapGSEXP);
+    Rcpp::traits::input_parameter< bool >::type iICGs(iICGsSEXP);
+    rcpp_result_gen = Rcpp::wrap(ASDpv3C(dw, K, Z, swapG, iICGs));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_crspack_foo7v2C", (DL_FUNC) &_crspack_foo7v2C, 1},
+    {"_crspack_foo7v2C", (DL_FUNC) &_crspack_foo7v2C, 2},
     {"_crspack_goo2C", (DL_FUNC) &_crspack_goo2C, 3},
     {"_crspack_DDstatV2C", (DL_FUNC) &_crspack_DDstatV2C, 3},
     {"_crspack_DDstatV1C", (DL_FUNC) &_crspack_DDstatV1C, 1},
     {"_crspack_var_funC", (DL_FUNC) &_crspack_var_funC, 1},
     {"_crspack_ASDstatV1C", (DL_FUNC) &_crspack_ASDstatV1C, 1},
     {"_crspack_ASDstatV2C", (DL_FUNC) &_crspack_ASDstatV2C, 2},
+    {"_crspack_ASDstatV3C", (DL_FUNC) &_crspack_ASDstatV3C, 4},
     {"_crspack_ASDpvC", (DL_FUNC) &_crspack_ASDpvC, 2},
+    {"_crspack_ASDpv3C", (DL_FUNC) &_crspack_ASDpv3C, 5},
     {NULL, NULL, 0}
 };
 
