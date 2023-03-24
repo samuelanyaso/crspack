@@ -74,7 +74,7 @@ ASDstatV3R <- function(mdat, swapG = TRUE, iICGs = FALSE, useZ = "percentiles", 
     }
 
     ## computes the ASD statistic
-    res0 <- ASDstatV3C(dw = mdat, Z = Zvals, iICGs = iICGs, swapG = swapG)
+    res0 <- ASDstatV3C(dw = mdat, Zvals = Zvals, iICGs = iICGs, swapG = swapG)
 
     if (useZ == "all")
         Zvals = NULL

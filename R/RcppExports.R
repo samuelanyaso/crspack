@@ -29,15 +29,15 @@ ASDstatV2C <- function(dw, iICGs) {
     .Call('_crspack_ASDstatV2C', PACKAGE = 'crspack', dw, iICGs)
 }
 
-ASDstatV3C <- function(dw, Z, swapG, iICGs) {
-    .Call('_crspack_ASDstatV3C', PACKAGE = 'crspack', dw, Z, swapG, iICGs)
+ASDstatV3C <- function(dw, Zvals, swapG, iICGs) {
+    .Call('_crspack_ASDstatV3C', PACKAGE = 'crspack', dw, Zvals, swapG, iICGs)
 }
 
 ASDpvC <- function(dw, K) {
     .Call('_crspack_ASDpvC', PACKAGE = 'crspack', dw, K)
 }
 
-ASDpv3C <- function(dw, K, Z, swapG, iICGs) {
-    .Call('_crspack_ASDpv3C', PACKAGE = 'crspack', dw, K, Z, swapG, iICGs)
+ASDpv3C <- function(dw, K, Zvals, swapG, iICGs) {
+    .Call('_crspack_ASDpv3C', PACKAGE = 'crspack', dw, K, Zvals, swapG, iICGs)
 }
 

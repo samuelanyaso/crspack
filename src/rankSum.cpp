@@ -690,71 +690,73 @@ List ASDstatV2C (arma::mat dw, bool iICGs){
 
 
 // [[Rcpp::export]]
-List ASDstatV3C (arma::mat dw, arma::vec Z, bool swapG, bool iICGs){
+List ASDstatV3C (arma::mat dw, arma::vec Zvals, bool swapG, bool iICGs){
+	
+	double N = Zvals.size(); 
+	arma::vec Vstar(Zvals.size()); // initialize the vector
+	arma::vec Z = dw.col(2); // the continuous covariate
+	arma::mat tmp1; // new matrix where third col. will contain the group labels.
+	arma::vec tmp3;
+	arma::uvec indx;
+	List tstat1; // stores the results for the T stat
+	double tmp2; // stores the result for the squared difference.
+	double v_stat; 
+	// double a1; double a2; double a3;
+	List b0;
+	bool b1; bool b2;
+	double N0 = 0;
+	double z;
 
-   double N = Z.size(); // total number of observations
-   double z;
-   arma::mat tmp1; // new matrix where third col. will contain the group labels.
-   arma::vec tmp3;
-   arma::uvec indx;
-   List tstat1; // stores the results for the T stat
-   double tmp2; // stores the result for the squared difference.
-   arma::vec Vstar(Z.size()); // initialize the vector
-   double v_stat;
-   // double a1; double a2; double a3;
-   List b0;
-   bool b1; bool b2;
-   double N0 = 0;
+	for (arma::uword j = 0; j < N; j++) {
+		// Rcpp::Rcout << j << std::endl; // prints out iteration number
 
-   for (arma::uword j = 0; j < N; j++) {
-     // Rcpp::Rcout << j << std::endl; // prints out iteration number
+		z = Zvals(j);
+		tmp1 = dw;
+		tmp3 = tmp1.col(2);
+		tmp3.zeros();
+		indx = find(Z <= z);
+		tmp3.elem(indx).ones();
+		tmp1.col(2) = tmp3;
+		
+		// check for incomplete ICG size, if true, swap the group indicator of a randomly selected observation in such cluster;
+		// else ignore the computation Z's that create dataset with incomplete ICG.
+		if(swapG){
+			b0 = foo7v2C(tmp1, swapG); // check for incomplete ICG size
+			
+			// compute the DD statistic
+			tstat1 = DDstatV2C(b0["resMat"], false, true);
+			tmp2 = tstat1["Zscore"]; 
+			Vstar(j) = tmp2 * tmp2;
+		} else {
+			// move to the next z if dataset with incomplete ICG str is created
+			// else, compute the DD statistic
+			if(iICGs){
+				b0 = foo7v2C(tmp1, swapG); // check for incomplete ICG size
+				b1 = b0["iICG"];
+				b2 = false;
+			} else {
+				b1 = false;
+				b2 = true;
+			}
+			
+			if(b1){
+				N0++;
+				continue;
+			} else {
+				tstat1 = DDstatV2C(tmp1, b2, true);
+				tmp2 = tstat1["Zscore"]; 
+				Vstar(j) = tmp2 * tmp2;
+			}
+		}
+	}
+	v_stat = accu(Vstar)/(N - N0);
+	
+	List res;
+	res["v_stat"] = v_stat;
+	res["Vstar"] = Vstar;
+	return(res);
+}
 
-     z = Z(j);
-     tmp1 = dw;
-     tmp3 = tmp1.col(2);
-     tmp3.zeros();
-     indx = find(Z <= z);
-     tmp3.elem(indx).ones();
-     tmp1.col(2) = tmp3;
-
-     // check for incomplete ICG size, if true, swap the group indicator of a randomly selected observation in such cluster;
-     // else ignore the computation Z's that create dataset with incomplete ICG.
-     if(swapG){
-       b0 = foo7v2C(tmp1, swapG); // check for incomplete ICG size
-
-       // compute the DD statistic
-       tstat1 = DDstatV2C(b0["resMat"], false, true);
-       tmp2 = tstat1["Zscore"];
-       Vstar(j) = tmp2 * tmp2;
-     } else {
-       // move to the next z if dataset with incomplete ICG str is created
-       // else, compute the DD statistic
-       if(iICGs){
-         b0 = foo7v2C(tmp1, swapG); // check for incomplete ICG size
-         b1 = b0["iICG"];
-         b2 = false;
-       } else {
-         b1 = false;
-         b2 = true;
-       }
-
-       if(b1){
-         N0++;
-         continue;
-       } else {
-         tstat1 = DDstatV2C(tmp1, b2, true);
-         tmp2 = tstat1["Zscore"];
-         Vstar(j) = tmp2 * tmp2;
-       }
-     }
-   }
-   v_stat = accu(Vstar)/(N - N0);
-
-   List res;
-   res["v_stat"] = v_stat;
-   res["Vstar"] = Vstar;
-   return(res);
- }
 
 // [[Rcpp::export]]
 List ASDpvC (arma::mat dw, int K){
@@ -813,57 +815,57 @@ List ASDpvC (arma::mat dw, int K){
 
 
 // [[Rcpp::export]]
-List ASDpv3C (arma::mat dw, int K, arma::vec Z, bool swapG, bool iICGs){
-
-  arma::vec cids = sort(unique(dw.col(0))); // unique cluster ids
-  double m = cids.size(); // total number of unique clusters
-  arma::uword xcid;
-  List tmp;
-  arma::mat tmp1;
-  arma::vec tmp2;
-  arma::vec tmp3;
-  NumericVector tmp4a; // Rcpp NumericVector
-  arma::vec tmp4b;
-  arma::uvec indx;
-  arma::vec vres(K); // initialize the vector
-  arma::vec tmp5;
-  double p_value;
-  double obsV;
-
-  // obtain the observed test statistic
-  tmp = ASDstatV3C(dw, Z, swapG, iICGs);
-  obsV = tmp["v_stat"];
-
-  for (int k = 0; k < K; k++) {
-    tmp1 = dw;
-    tmp2 = tmp1.col(2); // continuous covariate for all clusters
-
-    // permute the Zs within each cluster
-    for (arma::uword j = 0; j < m; j++) {
-      xcid = cids(j);
-      indx = find(dw.col(0) == xcid);
-      tmp3 = tmp2.elem(indx); // covariate corresponding to cluster j
-      tmp4a = RcppArmadillo::sample(tmp3, tmp3.size(), false); // similar to R's sample function
-      tmp4b = as<arma::vec>(tmp4a);   // convert Rcpp::NumericVector to arma::vec
-      tmp2.elem(indx) = tmp4b; // replaces the original values of Z in cluster j with the permuted values
-    }
-    tmp1.col(2) = tmp2; // replace the Z column with permuted vector
-
-    // compute the V statistic for the permuted sample
-    tmp = ASDstatV3C(tmp1, Z, swapG, iICGs);
-    vres(k) = tmp["v_stat"];
-  }
-
-  // calculate the p-value
-  tmp5.zeros(vres.size());
-  tmp5.elem(find(vres >= obsV)).fill(1.0);
-  p_value = accu(tmp5)/K;
-
-  List res;
-  res["obstat"] = obsV;
-  res["permstat"] = vres;
-  res["pvalue"] = p_value;
-
-  return(res);
+List ASDpv3C (arma::mat dw, int K, arma::vec Zvals, bool swapG, bool iICGs){
+	
+	arma::vec cids = sort(unique(dw.col(0))); // unique cluster ids
+	double m = cids.size(); // total number of unique clusters
+	arma::uword xcid;
+	List tmp;
+	arma::mat tmp1;
+	arma::vec tmp2;
+	arma::vec tmp3;
+	NumericVector tmp4a; // Rcpp NumericVector
+	arma::vec tmp4b; 
+	arma::uvec indx;
+	arma::vec vres(K); // initialize the vector
+	arma::vec tmp5;
+	double p_value;
+	double obsV; 
+	
+	// obtain the observed test statistic
+	tmp = ASDstatV3C(dw, Zvals, swapG, iICGs); 
+	obsV = tmp["v_stat"]; 
+	
+	for (int k = 0; k < K; k++) {
+		tmp1 = dw;
+		tmp2 = tmp1.col(2); // continuous covariate for all clusters
+		
+		// permute the Zs within each cluster
+		for (arma::uword j = 0; j < m; j++) {
+			xcid = cids(j);
+			indx = find(dw.col(0) == xcid);
+			tmp3 = tmp2.elem(indx); // covariate corresponding to cluster j
+			tmp4a = RcppArmadillo::sample(tmp3, tmp3.size(), false); // similar to R's sample function
+			tmp4b = as<arma::vec>(tmp4a);   // convert Rcpp::NumericVector to arma::vec
+			tmp2.elem(indx) = tmp4b; // replaces the original values of Z in cluster j with the permuted values
+		}
+		tmp1.col(2) = tmp2; // replace the Z column with permuted vector
+		
+		// compute the V statistic for the permuted sample
+		tmp = ASDstatV3C(tmp1, Zvals, swapG, iICGs); 
+		vres(k) = tmp["v_stat"]; 
+	}
+	
+	// calculate the p-value
+	tmp5.zeros(vres.size());
+	tmp5.elem(find(vres >= obsV)).fill(1.0);
+	p_value = accu(tmp5)/K;
+	
+	List res;
+	res["obstat"] = obsV;
+	res["permstat"] = vres;
+	res["pvalue"] = p_value;
+	
+	return(res);
 }
 

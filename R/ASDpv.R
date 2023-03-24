@@ -60,8 +60,23 @@ ASDpv <- function(mdat, swapG = TRUE, iICGs = FALSE, useZ = "percentiles", npcti
     mdat <- apply(as.matrix(mdat), 2, as.numeric)
 
     ## compute the observed test statistic
-    obstat <- ASDstatV3R(mdat = mdat, swapG = swapG, iICGs = iICGs, useZ = useZ, npctiles = npctiles)
-    Zvals <- obstat$Zvals
+    Z <- mdat[, "Z"]
+
+    # values of Z at which DD stat should be evaluated
+    if (useZ == "all") {
+
+        # use all values of Z - if this option is used, parallelize this function and unparallelize the ASDpvR function.
+        Zvals <- Z
+    } else if (useZ == "percentiles") {
+
+        # use the values of Z at certain percentiles
+        Zvals <- as.numeric(quantile(Z, seq(0, 1, length.out = npctiles)))
+    } else if (useZ == "prespecified") {
+
+        # use pre-specified values of Z
+        Zvals <- Zvals
+    }
+    obstat <- ASDstatV3R(mdat = mdat, swapG = swapG, iICGs = iICGs, useZ = "prespecified", Zvals = Zvals)
     obstat <- obstat$vstat
 
     if (parallel == TRUE) {
@@ -93,11 +108,7 @@ ASDpv <- function(mdat, swapG = TRUE, iICGs = FALSE, useZ = "percentiles", npcti
                 }))
 
                 # compute the ASDstat for the permuted data
-                if (useZ != "all") {
-                  pstat <- ASDstatV3R(mdat = pdat, swapG = swapG, iICGs = iICGs, useZ = "prespecified", Zvals = Zvals)
-                } else {
-                  pstat <- ASDstatV3R(mdat = pdat, swapG = swapG, iICGs = iICGs, useZ = "all")
-                }
+                pstat <- ASDstatV3R(mdat = pdat, swapG = swapG, iICGs = iICGs, useZ = "prespecified", Zvals = Zvals)
 
                 # return the values for both stats
                 pstat$vstat
@@ -113,7 +124,7 @@ ASDpv <- function(mdat, swapG = TRUE, iICGs = FALSE, useZ = "percentiles", npcti
         res <- list(obstat = obstat, permstat = permstat, pvalue = pvalue)
     } else {
         ## Note that the ASD statistic embedded in this function is based on the data sets created by all Z.
-        res <- ASDpv3C(dw = mdat, K = K, Z = Zvals, swapG = swapG, iICGs = iICGs)
+        res <- ASDpv3C(dw = mdat, K = K, Zvals = Zvals, swapG = swapG, iICGs = iICGs)
     }
     return(res)
 }
