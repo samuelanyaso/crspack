@@ -1,8 +1,8 @@
-##' Compute p-value for the ASD statistic.
+##' Compute p-value for the test statistic proposed by Anyaso-Samuel and Datta (ASD). The p-value for testing the effect of a continuous unit-level covariate on a cluster-correlated response while accounting for informativeness.
 ##'
-##' Uses permutation tests to obtain the p-value of the ASD statistic. The procedure proceeds by permuting the subject-level covariate within each cluster, the ASD-statistic is computed for each permuted sample. The p-value is the proportion of the permuted statistic greater than the observed statistic.
+##' Uses permutation tests to obtain the p-value of the ASD statistic. The procedure proceeds by permuting the unit-level covariate within each cluster, the ASD-statistic is computed for each permuted sample. The p-value is the proportion of the permuted statistic greater than the observed statistic.
 ##' @title p-value for the ASD statistic
-##' @param mdat a numeric matrix with columns names 'cID', 'Y', and 'Z' that denotes the cluster ID, response, and subject-level covariate, respectively.
+##' @param mdat a numeric matrix with columns names 'cID', 'Y', and 'Z' that denotes the cluster ID, response, and unit-level covariate, respectively.
 ##' @param swapG a logical argument set to TRUE if we should swap the group indicator of a random observation in a cluster with incomplete ICG size. Default is `TRUE`.
 ##' @param iICGs a logical argument indicating if values of Z that creates incomplete ICG should be discarded. If `swapG=TRUE` then set to `FALSE`. Default is `FALSE`.
 ##' @param useZ a character argument that indicates if 'all', 'percentiles', or 'prespecified' values of *Z* should be used to create data sets with a binary grouping variable. The DD statistic will be applied to these data sets. Default is 'percentiles'.
@@ -28,7 +28,7 @@
 ##'   ni <- rpois(n=1, lambda=4)+2 # cluster size
 ##'   cID <- rep(x=x, times=ni) # cluster ids
 ##'   nu <- rnorm(n=1, mean=0, sd=0.25) # cluster-level random effect
-##'   Z <- rnorm(n=ni, mean=1, sd=0.25) # subject-level covariate
+##'   Z <- rnorm(n=ni, mean=1, sd=0.25) # unit-level covariate
 ##'   Y <- 0.1*Z + nu + rnorm(n=ni, mean=0, sd=0.25) # response
 ##'   data.frame(cID=cID, Y=Y, Z=Z)
 ##' })
@@ -38,8 +38,7 @@
 ##' ## Estimate the p-value of the ASD statistic
 ##' ASDpv(mdat=mdat, swapG = TRUE, iICGs=FALSE, useZ='percentiles',
 ##' npctiles=10, Zvals=NULL, K = 10, parallel=TRUE, cores=5)
-ASDpv <- function(mdat, swapG = TRUE, iICGs = FALSE, useZ = "percentiles", npctiles = 10, Zvals = NULL, K = 10000, parallel = TRUE,
-    cores = 5) {
+ASDpv <- function(mdat, swapG = TRUE, iICGs = FALSE, useZ = "percentiles", npctiles = 10, Zvals = NULL, K = 10000, parallel = TRUE, cores = 5) {
 
     # figure out useZ
     arg0 <- c("all", "percentiles", "prespecified")
@@ -76,7 +75,7 @@ ASDpv <- function(mdat, swapG = TRUE, iICGs = FALSE, useZ = "percentiles", npcti
         # use pre-specified values of Z
         Zvals <- Zvals
     }
-    obstat <- ASDstatV3R(mdat = mdat, swapG = swapG, iICGs = iICGs, useZ = "prespecified", Zvals = Zvals)
+    obstat <- ASDstat(mdat = mdat, swapG = swapG, iICGs = iICGs, useZ = "prespecified", Zvals = Zvals)
     obstat <- obstat$vstat
 
     if (parallel == TRUE) {
@@ -96,7 +95,7 @@ ASDpv <- function(mdat, swapG = TRUE, iICGs = FALSE, useZ = "percentiles", npcti
         registerDoParallel(cl)
 
         ## compute the ASDstat based on permuted samples
-        permstat <- foreach(k = 1:K, .combine = "c", .errorhandling = "remove", .export = c("ASDstatV3R"), .packages = c("doParallel")) %dopar%
+        permstat <- foreach(k = 1:K, .combine = "c", .errorhandling = "remove", .export = c("ASDstat"), .packages = c("doParallel")) %dopar%
             {
 
                 ## create the permuted sample
@@ -108,7 +107,7 @@ ASDpv <- function(mdat, swapG = TRUE, iICGs = FALSE, useZ = "percentiles", npcti
                 }))
 
                 # compute the ASDstat for the permuted data
-                pstat <- ASDstatV3R(mdat = pdat, swapG = swapG, iICGs = iICGs, useZ = "prespecified", Zvals = Zvals)
+                pstat <- ASDstat(mdat = pdat, swapG = swapG, iICGs = iICGs, useZ = "prespecified", Zvals = Zvals)
 
                 # return the values for both stats
                 pstat$vstat

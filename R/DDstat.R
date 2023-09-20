@@ -3,9 +3,9 @@
 ##' Estimates the test statistic, expected value and variance of \insertCite{dutta2016;textual}{crspack}.
 ##' @title The Dutta & Datta statistic
 ##' @param mdat a numeric matrix with columns names 'cID', 'Y', and 'G' that denotes the cluster ID, response, and group indicator, respectively.
-##' @param iICGs a logical argument indicating if the data has incomplete ICG structure. 
+##' @param iICGs a logical argument indicating if the data has incomplete ICG structure. Use the `crspack::chkICG` function, as needed.
 ##' @param get_var a logical argument indicating whether the variance of the estimate should be obtained. Default is `TRUE`.
-##' @return a list of the DD test statistic, expected value, variance (optional), and Z-score (optional).
+##' @return a list that comprise the Dutta & Datta test statistic, expected value, variance (optional), and Z-score (optional).
 ##' @author Samuel Anyaso-Samuel, Somnath Datta
 ##' @export
 ##' @useDynLib crspack
@@ -29,10 +29,10 @@
 ##' })
 ##' mdat <- do.call(rbind, mdat)
 ##' mdat <- apply(as.matrix(mdat),2,as.numeric)
-##' 
+##'
 ##' ## Estimate the DD statistic
-##' DDstatV2(mdat=mdat, iICGs=TRUE, get_var=TRUE)
-DDstatV2 <- function(mdat, iICGs = TRUE, get_var = TRUE) {
+##' DDstat(mdat=mdat, iICGs=TRUE, get_var=TRUE)
+DDstat <- function(mdat, iICGs = TRUE, get_var = TRUE) {
 
     # figure out the data
     arg2 <- c("cID", "Y", "G")

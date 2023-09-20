@@ -17,7 +17,7 @@ ASDpv(
 )
 }
 \arguments{
-\item{mdat}{a numeric matrix with columns names 'cID', 'Y', and 'Z' that denotes the cluster ID, response, and subject-level covariate, respectively.}
+\item{mdat}{a numeric matrix with columns names 'cID', 'Y', and 'Z' that denotes the cluster ID, response, and unit-level covariate, respectively.}
 
 \item{swapG}{a logical argument set to TRUE if we should swap the group indicator of a random observation in a cluster with incomplete ICG size. Default is \code{TRUE}.}
 
@@ -39,10 +39,10 @@ ASDpv(
 a list of three elements which are the observed test statistic, a numeric vector of the \emph{K} permuted statistics, and the computed p-value.
 }
 \description{
-Compute p-value for the ASD statistic.
+Compute p-value for the test statistic proposed by Anyaso-Samuel and Datta (ASD). The p-value for testing the effect of a continuous unit-level covariate on a cluster-correlated response while accounting for informativeness.
 }
 \details{
-Uses permutation tests to obtain the p-value of the ASD statistic. The procedure proceeds by permuting the subject-level covariate within each cluster, the ASD-statistic is computed for each permuted sample. The p-value is the proportion of the permuted statistic greater than the observed statistic.
+Uses permutation tests to obtain the p-value of the ASD statistic. The procedure proceeds by permuting the unit-level covariate within each cluster, the ASD-statistic is computed for each permuted sample. The p-value is the proportion of the permuted statistic greater than the observed statistic.
 }
 \examples{
 ## simple data simulation
@@ -51,7 +51,7 @@ mdat <- lapply(1:m, function(x){
   ni <- rpois(n=1, lambda=4)+2 # cluster size
   cID <- rep(x=x, times=ni) # cluster ids
   nu <- rnorm(n=1, mean=0, sd=0.25) # cluster-level random effect
-  Z <- rnorm(n=ni, mean=1, sd=0.25) # subject-level covariate
+  Z <- rnorm(n=ni, mean=1, sd=0.25) # unit-level covariate
   Y <- 0.1*Z + nu + rnorm(n=ni, mean=0, sd=0.25) # response
   data.frame(cID=cID, Y=Y, Z=Z)
 })
